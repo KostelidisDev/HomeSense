@@ -1,0 +1,23 @@
+server:
+  port: ${SERVER_PORT}
+
+spring:
+  datasource:
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+
+homesense-security:
+  allowed-ips: ${HOMESENSE_ALLOWED_IPS}
+
+nodesense-service:
+  ip-prefix: ${NODESENSE_IP_PREFIX}
+  timeout: ${NODESENSE_TIMEOUT}
+  scheduled-timeout: ${NODESENSE_SCHEDULED_TIMEOUT}
+  scheduled-interval: ${NODESENSE_SCHEDULED_INTERVAL}
+  scheduled-delay: ${NODESENSE_SCHEDULED_DELAY}

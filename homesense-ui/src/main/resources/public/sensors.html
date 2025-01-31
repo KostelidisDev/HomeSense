@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>Sensors - HomeSenseUI</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="./assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="container py-4">
+    <h1 class="text-center mb-4">HomeSenseUI</h1>
+    <div class="text-center">
+        <div class="btn-group">
+            <a class="btn btn-block btn-primary" href="./index.html">Home</a>
+            <a class="btn btn-block btn-primary active" href="./sensors.html">Sensors</a>
+            <a class="btn btn-block btn-primary" href="./graphs.html">Graphs</a>
+        </div>
+    </div>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6">
+                <h2 class="mb-4">Sensors</h2>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group new-sensor-form">
+                    <label for="newSensorIp">Sensor IP</label>
+                    <input class="form-control" id="newSensorIp" type="text">
+                    <button
+                            class="btn btn-success"
+                            id="addSensorButton"
+                            onclick="addSensorEventHandler()"
+                            type="submit">
+                        Add
+                    </button>
+                    <button
+                            class="btn btn-success"
+                            id="discoverSensorsButton"
+                            onclick="discoverSensorsEventHandler()"
+                            type="submit">
+                        Discover
+                    </button>
+                </div>
+            </div>
+        </div>
+        <h4>Discovered Sensors</h4>
+        <h5 class="visually-hidden" id="discovering-message">Discovering...</h5>
+        <table class="table table-striped table-bordered">
+            <thead class="table-dark">
+            <tr>
+                <th>Name</th>
+                <th>IP</th>
+                <th>Type</th>
+                <th>Created At</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="discovered-sensors-tbody">
+            </tbody>
+        </table>
+        <h4>Paired Sensors</h4>
+        <table class="table table-striped table-bordered">
+            <thead class="table-dark">
+            <tr>
+                <th>Name</th>
+                <th>IP</th>
+                <th>Type</th>
+                <th>Created At</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="sensors-tbody">
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-center hs-text-block">
+        This project was conducted as part of the course Ρ101: Embedded Systems in the M.Sc. program in Robotics,
+        offered by the Department of Computer, Informatics and Telecommunications Engineering at the International
+        Hellenic University.
+    </div>
+    <div class="text-center hs-text-block">
+        Developed by Iordanis Kostelidis <<a href="mailto:iordkost@ihu.gr">iordkost@ihu.gr</a>>
+    </div>
+    <div class="text-center hs-text-block">
+        You can find the source code for this project on <a href="https://github.com/KostelidisDev/HomeSense-Platform">GitHub</a>
+        <br/>
+        The GitHub repository contains the KiCad projects for the compatible IoT devices (LightSense, GasSense,
+        TempSense), the source code for the compatible IoT devices, the template source code (NodeSense), the source
+        code of HomeSense API (Spring Boot).
+    </div>
+</div>
+
+<script src="./assets/js/config.api.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    const apiConfig = getApiConfig();
+    const sensorsCrudApi = new SensorCrudApi(apiConfig);
+    const sensorsRpcApi = new SensorRpcApi(apiConfig);
+
+    function refreshPage() {
+        window.location.reload();
+    }
+
+    function clearDiscovered() {
+        document.getElementById('discovered-sensors-tbody').innerHTML = ''
+    }
+
+    function renderSensors() {
+        sensorsCrudApi.getSensors()
+            .then((sensors) => sensors.forEach((sensor) => appendSensor(
+                sensor,
+                null,
+                editSensorEventHandler,
+                deleteSensorEventHandler,
+                refreshPage,
+                document.getElementById('sensors-tbody')
+            )))
+    }
+
+    function addSensorEventHandler() {
+        const ip = document.getElementById('newSensorIp').value;
+        sensorsRpcApi.discoverSensor(ip)
+            .then((status => {
+                const {ip, name, type} = status;
+                return {
+                    name: name,
+                    ip: ip,
+                    type: type,
+                }
+            }))
+            .then(sensor => sensorsCrudApi.createSensor(sensor))
+            .then(() => refreshPage())
+    }
+
+    function discoverSensorsEventHandler() {
+        document.getElementById('discoverSensorsButton').classList.add('disabled');
+        document.getElementById('discovering-message').classList.remove('visually-hidden');
+        sensorsRpcApi.discoverSensors()
+            .then((sensors) => {
+                clearDiscovered();
+                return sensors
+            })
+            .then((sensors) => sensors.forEach((sensor) => appendSensor(
+                sensor,
+                sensorsCrudApi.createSensor.bind(sensorsCrudApi),
+                null,
+                null,
+                refreshPage,
+                document.getElementById('discovered-sensors-tbody')
+            )))
+            .then(() => {
+                document.getElementById('discoverSensorsButton').classList.remove('disabled');
+                document.getElementById('discovering-message').classList.add('visually-hidden');
+            })
+    }
+
+    function editSensorEventHandler(id) {
+        console.log("Editing sensor with id ", id);
+        // noinspection JSUnresolvedReference
+        Swal.fire({
+            title: 'Not supported',
+            text: 'We currently do not support sensor editing!',
+            icon: 'warning',
+            confirmButtonText: 'Cool'
+        })
+    }
+
+    function deleteSensorEventHandler(id) {
+        console.log("Deleting sensor with id ", id);
+        // noinspection JSUnresolvedReference
+        return sensorsCrudApi.deleteSensorById(id)
+            .then(() => Swal.fire({
+                title: "Deleted!",
+                text: "Your file has been deleted.",
+                icon: "success"
+            }));
+    }
+
+    discoverSensorsEventHandler();
+    renderSensors();
+
+</script>
+</body>
+</html>

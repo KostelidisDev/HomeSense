@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/homesense
+    username: homesense
+    password: homesense
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+
+homesense-security:
+  allowed-ips: 127.0.0.1, 0:0:0:0:0:0:0:1
+
+nodesense-service:
+  ip-prefix: 192.168.1
+  timeout: 500
+  scheduled-timeout: 1000
+  scheduled-interval: 5000
+  scheduled-delay: 1000

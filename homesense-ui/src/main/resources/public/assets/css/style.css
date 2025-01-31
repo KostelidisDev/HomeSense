@@ -1,0 +1,33 @@
+body {
+    background-color: #1a1a1a;
+    color: #f8f9fa;
+}
+
+.form-control, .btn {
+    background-color: #333;
+    color: #f8f9fa;
+}
+
+.form-control:focus, .btn:focus {
+    background-color: #444;
+    color: #f8f9fa;
+    box-shadow: none;
+}
+
+.hs-text-block {
+    margin: 20px 0;
+}
+
+td {
+    --bs-text-opacity: 1;
+    color: white !important;
+}
+
+.new-sensor-form > label {
+    margin-right: 10px;
+    margin-top: 5px;
+}
+
+canvas {
+    max-width: 800px;
+}

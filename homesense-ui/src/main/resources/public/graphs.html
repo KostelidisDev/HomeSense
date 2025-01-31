@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>Sensors - HomeSenseUI</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="./assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="container py-4">
+    <h1 class="text-center mb-4">HomeSenseUI</h1>
+    <div class="text-center">
+        <div class="btn-group">
+            <a class="btn btn-block btn-primary" href="./index.html">Home</a>
+            <a class="btn btn-block btn-primary" href="./sensors.html">Sensors</a>
+            <a class="btn btn-block btn-primary active" href="./graphs.html">Graphs</a>
+        </div>
+    </div>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6">
+                <h2 class="mb-4">Graphs</h2>
+            </div>
+        </div>
+        <div class="row" id="graphs">
+
+        </div>
+    </div>
+
+    <div class="text-center hs-text-block">
+        This project was conducted as part of the course Ρ101: Embedded Systems in the M.Sc. program in Robotics,
+        offered by the Department of Computer, Informatics and Telecommunications Engineering at the International
+        Hellenic University.
+    </div>
+    <div class="text-center hs-text-block">
+        Developed by Iordanis Kostelidis <<a href="mailto:iordkost@ihu.gr">iordkost@ihu.gr</a>>
+    </div>
+    <div class="text-center hs-text-block">
+        You can find the source code for this project on <a href="https://github.com/KostelidisDev/HomeSense-Platform">GitHub</a>
+        <br/>
+        The GitHub repository contains the KiCad projects for the compatible IoT devices (LightSense, GasSense,
+        TempSense), the source code for the compatible IoT devices, the template source code (NodeSense), the source
+        code of HomeSense API (Spring Boot).
+    </div>
+</div>
+
+<script src="./assets/js/config.api.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+<script>
+    const apiConfig = getApiConfig();
+    const sensorsCrudApi = new SensorCrudApi(apiConfig);
+
+    function renderGraphs() {
+        const graph = document.getElementById('graphs');
+        const lastMinutes = 1;
+        const getMaxValueForType = (typeRaw) => {
+            const type = sensorTypeRawToSensorType(typeRaw)
+            switch (type) {
+                case SensorType.LIGHT:
+                    return 1024;
+                case SensorType.TEMP:
+                    return 50;
+                case SensorType.GAS:
+                    return 1024;
+                default:
+                    return 1024;
+            }
+        }
+        const getMinValueForType = (typeRaw) => {
+            const type = sensorTypeRawToSensorType(typeRaw)
+            switch (type) {
+                case SensorType.LIGHT:
+                    return 0;
+                case SensorType.TEMP:
+                    return -15;
+                case SensorType.GAS:
+                    return 0;
+                default:
+                    return -1024;
+            }
+        }
+        const getValuesToShowForType = (raw, processed, typeRaw) => {
+            const type = sensorTypeRawToSensorType(typeRaw)
+            if (type === SensorType.LIGHT) {
+                return raw;
+            }
+            if (type === SensorType.TEMP) {
+                const result = []
+                for (const processedElement of processed) {
+                    if (processedElement === null) {
+                        result.push(0)
+                        continue
+                    }
+                    const parsed = JSON.parse(processedElement)
+                    if (parsed === null) {
+                        result.push(0)
+                        continue
+                    }
+                    const celsius = parsed['celsius']
+                    if (celsius === null) {
+                        result.push(0)
+                        continue
+                    }
+                    result.push(celsius);
+                }
+                return result;
+            }
+            if (type === SensorType.GAS) {
+                return raw;
+            }
+            return raw;
+        }
+
+        const getColorForType = (context, typeRaw) => {
+            const type = sensorTypeRawToSensorType(typeRaw)
+            const {dataIndex, chart} = context;
+            const value = chart.data.datasets[0].data[dataIndex];
+            if (value === undefined) {
+                return 'rgb(255,255,255)';
+            }
+            switch (type) {
+                case SensorType.LIGHT:
+                    return (value > 600)
+                        ? 'rgb(255,255,0)'
+                        : (value < 300)
+                            ? 'rgb(255,255,128)'
+                            : 'rgb(255,255,64)';
+                case SensorType.TEMP:
+                    return (value > 30)
+                        ? 'rgb(255, 0, 0)'
+                        : (value < 10)
+                            ? 'rgb(0,255,204)'
+                            : 'rgb(255,255,255)';
+                case SensorType.GAS:
+                    return (value > 600)
+                        ? 'rgb(255, 0, 0)'
+                        : 'rgb(0,255,0)';
+                default:
+                    return 'rgb(255,255,255)';
+            }
+        }
+
+        const getYLabelForType = (typeRaw) => {
+            const type = sensorTypeRawToSensorType(typeRaw)
+            switch (type) {
+                case SensorType.LIGHT:
+                    return "Voltage";
+                case SensorType.TEMP:
+                    return "Celsius";
+                case SensorType.GAS:
+                    return "Voltage";
+                default:
+                    return "Voltage";
+            }
+        }
+
+        sensorsCrudApi.getSensors()
+            .then(sensors => sensors.forEach((sensor) => {
+                appendGraph(
+                    sensor.name,
+                    sensor.type,
+                    apiConfig,
+                    sensor.id,
+                    lastMinutes,
+                    graph,
+                    getMinValueForType,
+                    getMaxValueForType,
+                    getValuesToShowForType,
+                    getColorForType,
+                    getYLabelForType,
+                )
+            }))
+    }
+
+    renderGraphs();
+
+</script>
+</body>
+</html>

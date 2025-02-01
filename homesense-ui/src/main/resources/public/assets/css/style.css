@@ -31,3 +31,11 @@ td {
 canvas {
     max-width: 800px;
 }
+
+.fas {
+    font-size:4em;
+}
+
+.hs-text-center {
+    text-align: center;
+}

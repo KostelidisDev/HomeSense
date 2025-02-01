@@ -1,6 +1,10 @@
-/.idea
-/target
-/.dockerignore
+.idea
+target
+hooks
+.dockerignore
 .gitignore
-/docker-compose.yml
-/docker
+*.sh
+docker-compose.yml
+Dockerfile.*
+LICENSE
+README.md

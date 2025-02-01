@@ -1,10 +1,10 @@
-ARG BASE_BUILDER_IMAGE="maven:3-amazoncorretto-21"
+ARG BASE_BUILDER_IMAGE="maven:3.9.9-eclipse-temurin-21-alpine"
 FROM ${BASE_BUILDER_IMAGE} AS builder
 WORKDIR /root/src
 COPY . .
 RUN mvn package
 
-FROM amazoncorretto:21
+FROM eclipse-temurin:21-alpine
 
 WORKDIR /opt/gr/ihu/robotics/homesense
 COPY --from=builder /root/src/homesense-api/target/homesense-api-1.0-SNAPSHOT.jar ./homesense-api.jar

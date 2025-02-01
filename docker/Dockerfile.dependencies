@@ -1,4 +1,4 @@
-ARG BASE_BUILDER_IMAGE="maven:3-amazoncorretto-21"
+ARG BASE_BUILDER_IMAGE="maven:3.9.9-eclipse-temurin-21-alpine"
 FROM ${BASE_BUILDER_IMAGE}
 WORKDIR /root/src
 COPY . .
